@@ -1,0 +1,13 @@
+# Ignore binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Ignore temporary files
+*.tmp
+*.log
+
+# Ignore backups
+*.bak*
