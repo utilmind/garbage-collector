@@ -1,7 +1,8 @@
 /*
-   Garbage Collector - delete outdated files
-   Version: 1.0.0
+   Garbage Collector - CLI tool to delete outdated files, expired for more than N days
+   PLEASE BE CAREFUL! AUTHORS ARE NOT RESPONSIBLE IF YOU ACCIDENTALLY DELETE SOMETHING IMPORTANT!
 
+   Version: 1.0.0
    Copyright (c) 2024 https://github.com/utilmind/
 
    This software is licensed under the MIT License.
@@ -81,34 +82,4 @@ func main() {
     }
 
     fmt.Sprintf("test %s", expire);
-
-    // Смотри, если не указан параметр -, то пусть будет подтверждение. Действительно ли удалить все файлы старше N дней из такой-то директории?
-
-
-/* TODO:
-    dir := "путь/к/директории"
-    cutoff := time.Now().AddDate(0, 0, -30) // Время 30 дней назад
-
-    err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-        if err != nil {
-            return err
-        }
-
-        // Проверяем, является ли объект файлом и старше ли он 30 дней
-        if !info.IsDir() && info.ModTime().Before(cutoff) {
-            fmt.Println("Удаляю:", path)
-            if err := os.Remove(path); err != nil {
-                return err
-            }
-        }
-
-        return nil
-    })
-
-    if err != nil {
-        fmt.Println("Ошибка:", err)
-    } else {
-        fmt.Println("Удаление завершено.")
-    }
-*/
 }
