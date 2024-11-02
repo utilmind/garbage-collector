@@ -1,5 +1,5 @@
 /*
-   Garbage Collector - clear outdated files
+   Garbage Collector - delete outdated files
    Version: 1.0.0
 
    Copyright (c) 2024 https://github.com/utilmind/
