@@ -44,23 +44,30 @@ func main() {
     cliArgs := map[string]*string{
         "dir":      flag.String("dir", "", "directory name"),
         "sub":      flag.String("sub", "", "include subdirectories"),
-        "ext":      flag.String("ext", "", "file extension(s). Comma-separated if multiple."),
-        "expire":   flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don't check date, delete all."), // AK: actually it's integer, but I'd prefer to parse it myself
-        "confirm":  flag.String("confirm", "", "'y' or 'yes' auto-confirms file deletions. Otherwise you'll need to confirm file deletions one by one."),
+        "ext":      flag.String("ext", "", "file extension(s). Comma-separated if multiple"),
+        "expire":   flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don't check date, delete all"), // AK: actually it's integer, but I'd prefer to parse it myself
+        "confirm":  flag.String("confirm", "", "'y' or 'yes' auto-confirms file deletions. Otherwise you'll need to confirm file deletions one by one"),
     }
+    usageExample := 
 
     flag.Usage = func() {
         thisExeName := filepath.Base(os.Args[0])
 
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", thisExeName)
 
-        for arg, str := range cliArgs {
-            fmt.Printf("Key: %s, Value: %d\n", arg, str)
-        }
+        flag.VisitAll(func(f *flag.Flag) {
+            def := f.DefValue;
+            if ("" != def) {
+                def = " (Default: " + def + ".)"
+            }
 
-		flag.PrintDefaults()
+			fmt.Printf("    -%s\t%s.%s\n", f.Name, f.Usage, def)//, f.Default)
+		})
+
+		//flag.PrintDefaults()
 		// Add custom description
 		fmt.Fprintf(os.Stderr, "\nExample: %s -dir=/var/www/project-name/data/cache -ext=jpg,jpeg,png,gif,webp -expire=60\n", thisExeName)
+		//fmt.Printf("\nExample: %s -dir=/var/www/project-name/data/cache -ext=jpg,jpeg,png,gif,webp -expire=60\n", thisExeName)
 	}
 
     flag.Parse()
