@@ -1,32 +1,41 @@
 /*
-   Garbage Collector - CLI tool to delete outdated files, expired for more than N days
-   PLEASE BE CAREFUL! AUTHORS ARE NOT RESPONSIBLE IF YOU ACCIDENTALLY DELETE SOMETHING IMPORTANT!
+Garbage Collector - CLI tool to delete outdated files, expired for more than N days
+PLEASE BE CAREFUL! AUTHORS ARE NOT RESPONSIBLE IF YOU ACCIDENTALLY DELETE SOMETHING IMPORTANT!
 
-   Version: 1.0.0
-   Copyright (c) 2024 https://github.com/utilmind/
+Version: 1.0.0
+Copyright (c) 2024 https://github.com/utilmind/
 
-   This software is licensed under the MIT License.
-   You can find the full license text at https://opensource.org/licenses/MIT
+This software is licensed under the MIT License.
+You can find the full license text at https://opensource.org/licenses/MIT
 
     TODO
         1. Complete regular script.
         2. Add support for multiple directories.
- */
+*/
 package main
 
 import (
     "flag"
     "fmt"
-    "strconv"
     "os"
     "path/filepath"
+    "strconv"
     "strings"
+
     "github.com/fatih/color"
-//    "time"
+    // "time"
 )
 
 // @CONFIG
-const DefExpireDays = 90;
+const DefExpireDays = 90
+
+var cliArgs = map[string]*string{
+    "dir":     flag.String("dir", "", "directory name (required)"),
+    "sub":     flag.String("sub", "", "include subdirectories"),
+    "ext":     flag.String("ext", "", "file extension(s). Comma-separated if multiple"),
+    "expire":  flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don’t check date, delete all"), // AK: actually it's integer, but I'd prefer to parse it myself
+    "confirm": flag.String("confirm", "", "'y' or 'yes' auto-confirms file deletions. Otherwise you’ll need to confirm file deletions one by one"),
+}
 
 // @private functions
 func showError() {
@@ -41,38 +50,30 @@ func die(str string) {
 }
 
 func main() {
-    cliArgs := map[string]*string{
-        "dir":      flag.String("dir", "", "directory name"),
-        "sub":      flag.String("sub", "", "include subdirectories"),
-        "ext":      flag.String("ext", "", "file extension(s). Comma-separated if multiple"),
-        "expire":   flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don't check date, delete all"), // AK: actually it's integer, but I'd prefer to parse it myself
-        "confirm":  flag.String("confirm", "", "'y' or 'yes' auto-confirms file deletions. Otherwise you'll need to confirm file deletions one by one"),
-    }
-
     flag.Usage = func() {
         thisExeName := filepath.Base(os.Args[0])
 
-		fmt.Printf("Usage of %s:\n", thisExeName)
+        fmt.Printf("\nUsage of %s:\n", thisExeName)
 
-		//This is instead of flag.PrintDefaults()...
+        // This is instead of flag.PrintDefaults()...
         flag.VisitAll(func(f *flag.Flag) {
-            def := f.DefValue;
-            if ("" != def) {
+            def := f.DefValue
+            if "" != def {
                 def = " (Default: " + def + ".)"
             }
 
-			fmt.Printf("    -%s\t%s.%s\n", f.Name, f.Usage, def)//, f.Default)
-		})
+            fmt.Printf("    -%s\t%s.%s\n", f.Name, f.Usage, def) //, f.Default)
+        })
 
-		// Add custom description
-		fmt.Printf("\nExample: %s -dir=/var/www/project-name/data/cache -ext=jpg,jpeg,png,gif,webp -expire=60\n", thisExeName)
-	}
+        // Add custom description
+        fmt.Printf("\nExample: %s -dir=/var/www/your-project-name/data/cache -ext=jpg,jpeg,png,gif,webp -expire=60\n", thisExeName)
+    }
 
     flag.Parse()
 
     if "" == *cliArgs["dir"] {
         showError()
-        fmt.Println("-dir argument is required.\n")
+        fmt.Print("-dir argument is required.\n")
         flag.Usage()
         os.Exit(0)
     }
@@ -86,5 +87,5 @@ func main() {
         die(fmt.Sprintf("Invalid integer value in argument -expire=%s. Please use integer value to specify the number of days, or skip it to use default %d days.", *cliArgs["expire"], DefExpireDays))
     }
 
-    fmt.Sprintf("test %s", expire);
+    fmt.Printf("test %d", expire)
 }
