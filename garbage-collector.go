@@ -37,7 +37,7 @@ var cliArgs = map[string]*string{
     "ext":     flag.String("ext", "", "file extension(s). Comma-separated if multiple"),
     "expire":  flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don’t check date, delete all"), // AK: actually it's integer, but I'd prefer to parse it myself
     "confirm": flag.String("confirm", "", "'y' or 'yes' auto-confirms file deletions. Otherwise you’ll need to confirm file deletions one by one"),
-    "silent":  flag.String("silent", "", "don’t show the names of deleted files"),
+    "silent":  flag.String("silent", "", "don’t show the names of deleted files, if deletion is auto-confirmed (by -confirm=yes option)"),
 }
 
 // @private functions
@@ -113,10 +113,8 @@ func main() {
                     fmt.Printf("Skipped file `%s`.\n", path)
                     return nil
                 }
-            }else {
-                if "" == *cliArgs["silent"] {
-                    fmt.Printf("Deleting `%s`...\n", path)
-                }
+            }else if "" == *cliArgs["silent"] {
+                fmt.Printf("Deleting `%s`...\n", path)
             }
 
             err := os.Remove(path)
