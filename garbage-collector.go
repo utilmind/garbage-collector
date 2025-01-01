@@ -21,13 +21,14 @@ import (
     "path/filepath"
     "strconv"
     "strings"
+    "time"
 
     "github.com/fatih/color"
     // "time"
 )
 
 // @CONFIG
-const DefExpireDays = 90
+const DefExpireDays = 90 // Default number of days before a file is considered expired. Used if -expire argument is omitted.
 
 var cliArgs = map[string]*string{
     "dir":     flag.String("dir", "", "directory name (required)"),
@@ -71,15 +72,17 @@ func main() {
 
     flag.Parse()
 
-    if "" == *cliArgs["dir"] {
+    //workDir := strings.TrimRight(*cliArgs["dir"], "/\\") // strip trailing slashes (works for both types, Linux/Mac and Windows)
+    workDir := *cliArgs["dir"]
+    if "" == workDir {
         showError()
         fmt.Print("-dir argument is required.\n")
         flag.Usage()
         os.Exit(0)
     }
 
-    if '/' == []rune(*cliArgs["dir"])[0] && 2 > strings.Count(*cliArgs["dir"], "/") {
-        die(fmt.Sprintf("No, it doesn’t works with root or any top-level directory. It will not process \"%s\" or any other \"/directory/\" under root.", *cliArgs["dir"]))
+    if '/' == []rune(workDir)[0] && 2 > strings.Count(workDir, "/") {
+        die(fmt.Sprintf("No, it doesn’t works with root or any top-level directory. It will not process \"%s\" or any other \"/directory/\" under root.", workDir))
     }
 
     expire, err := strconv.Atoi(*cliArgs["expire"])
@@ -87,5 +90,32 @@ func main() {
         die(fmt.Sprintf("Invalid integer value in argument -expire=%s. Please use integer value to specify the number of days, or skip it to use default %d days.", *cliArgs["expire"], DefExpireDays))
     }
 
-    fmt.Printf("test %d", expire)
+    // Calculate the expiration time
+    expireDuration := time.Duration(expire) * 24 * time.Hour
+    expireTime := time.Now().Add(-expireDuration)
+
+    // Walk through the directory and find files older than expireTime
+    err = filepath.Walk(workDir, func(path string, info os.FileInfo, err error) error {
+        if nil != err {
+            return err
+        }
+
+        // Check if the file is older than expireTime
+        if !info.IsDir() && info.ModTime().Before(expireTime) {
+            // Do we need debug output?
+            //fmt.Println(path)
+
+            err := os.Remove(path)
+            if nil != err {
+                // Don't die, just display error and continue...
+                fmt.Printf("Can't delete file `%s`.\n%v\n", path, err)
+            }
+        }
+
+        return nil // success
+    })
+
+    if nil != err {
+        die(fmt.Sprintf("Error walking the path `%s`.\n%v\n", workDir, err))
+    }
 }
