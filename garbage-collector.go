@@ -31,9 +31,9 @@ import (
 // @CONFIG
 const DefExpireDays = 90 // Default number of days before a file is considered expired. Used if -expire argument is omitted.
 
-var cliArgs = map[string]*string{
+var cliArgs = map[string]interface{}{
 	"dir":     flag.String("dir", "", "directory name (required)"),
-	"sub":     flag.String("sub", "", "include subdirectories"),
+	"sub":     flag.Bool("sub", false, "include subdirectories"),
 	"ext":     flag.String("ext", "", "file extension(s). Comma-separated if multiple"),
 	"expire":  flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don’t check date, delete all"), // AK: actually it's integer, but I'd prefer to parse it myself
 	"confirm": flag.String("confirm", "", "'y' or 'yes' auto-confirms file deletions. Otherwise you’ll need to confirm file deletions one by one"),
@@ -104,13 +104,19 @@ func main() {
 
 		isDir := info.IsDir()
 		// Skip subdirectories if `-sub` is not specified
-		if isDir && "" == *cliArgs["sub"] && path != *cliArgs["dir"] {
+		//if isDir && "" == *cliArgs["sub"] && path != *cliArgs["dir"] {
+		if info.IsDir() && !*cliArgs["sub"].(*bool) && path != *cliArgs["dir"].(*string) {
+			return filepath.SkipDir
+		}
+
+		// Skip subdirectories if -sub is not specified or not equal to "yes"
+		if info.IsDir() && !("yes" == *cliArgs["sub"].(*string) || "" == *cliArgs["sub"].(*string)) && path != workDir {
 			return filepath.SkipDir
 		}
 
 		// Check if the file is older than expireTime
 		if !isDir && info.ModTime().Before(expireTime) {
-			if "" == *cliArgs["confirm"] {
+			if "" == *cliArgs["confirm"].(*string) {
 				reader := bufio.NewReader(os.Stdin)
 				fmt.Printf("Do you really want to delete file `%s`? (y/n): ", path)
 				response, _ := reader.ReadString('\n')
@@ -119,7 +125,7 @@ func main() {
 					fmt.Printf("Skipped file `%s`.\n", path)
 					return nil
 				}
-			} else if "" == *cliArgs["silent"] {
+			} else if "" == *cliArgs["silent"].(*string) {
 				fmt.Printf("Deleting `%s`...\n", path)
 			}
 
