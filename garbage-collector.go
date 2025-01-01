@@ -15,6 +15,7 @@ You can find the full license text at https://opensource.org/licenses/MIT
 package main
 
 import (
+    "bufio"
     "flag"
     "fmt"
     "os"
@@ -36,6 +37,7 @@ var cliArgs = map[string]*string{
     "ext":     flag.String("ext", "", "file extension(s). Comma-separated if multiple"),
     "expire":  flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don’t check date, delete all"), // AK: actually it's integer, but I'd prefer to parse it myself
     "confirm": flag.String("confirm", "", "'y' or 'yes' auto-confirms file deletions. Otherwise you’ll need to confirm file deletions one by one"),
+    "silent":  flag.String("silent", "", "don’t show the names of deleted files"),
 }
 
 // @private functions
@@ -102,13 +104,25 @@ func main() {
 
         // Check if the file is older than expireTime
         if !info.IsDir() && info.ModTime().Before(expireTime) {
-            // Do we need debug output?
-            //fmt.Println(path)
+            if "" == *cliArgs["confirm"] {
+                reader := bufio.NewReader(os.Stdin)
+                fmt.Printf("Do you really want to delete file `%s`? (y/n): ", path)
+                response, _ := reader.ReadString('\n')
+                response = strings.TrimSpace(strings.ToLower(response))
+                if "y" != response && "yes" != response {
+                    fmt.Printf("Skipped file `%s`.\n", path)
+                    return nil
+                }
+            }else {
+                if "" == *cliArgs["silent"] {
+                    fmt.Printf("Deleting `%s`...\n", path)
+                }
+            }
 
             err := os.Remove(path)
             if nil != err {
                 // Don't die, just display error and continue...
-                fmt.Printf("Can't delete file `%s`.\n%v\n", path, err)
+                fmt.Printf("Can’t delete file `%s`.\n%v\n", path, err)
             }
         }
 
