@@ -27,14 +27,18 @@ import (
 // @CONFIG
 const DefExpireDays = 90 // Default number of days before a file is considered expired. Used if -expire argument is omitted.
 
-var cliArgs = map[string]interface{}{
-    "dir":     flag.String("dir", "", "directory name (required). It can be a single file name too. However, for safety reasons, it doesn’t works with top-level directories: the root and the next level below the root."),
-    "sub":     flag.Bool("sub", false, "include subdirectories, if -sub specified"),
-    "ext":     flag.String("ext", "", "file extension(s). Comma-separated if multiple"),
-    "expire":  flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don’t check date, delete all"), // AK: actually it's integer, but I'd prefer to parse it myself
-    "confirm": flag.String("confirm", "", "'y' or 'yes' auto-confirms file deletions. Otherwise you’ll need to confirm file deletions one by one"),
-    "silent":  flag.String("silent", "", "don’t show the names of deleted files, if deletion is auto-confirmed (by -confirm=yes option)"),
-}
+var (
+    cliArgs = map[string]interface{}{
+        "dir":     flag.String("dir", "", "directory name (required). It can be a single file name too. However, for safety reasons, it doesn’t works with top-level directories: the root and the next level below the root."),
+        "sub":     flag.Bool("sub", false, "include subdirectories, if -sub specified"),
+        "ext":     flag.String("ext", "", "file extension(s). Comma-separated if multiple"),
+        "expire":  flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don’t check date, delete all"), // AK: actually it's integer, but I'd prefer to parse it myself
+        "confirm": flag.String("confirm", "", "'y' or 'yes' auto-confirms file deletions. Otherwise you’ll need to confirm file deletions one by one"),
+        "silent":  flag.Bool("silent", false, "don’t show the names of deleted files, if deletion is auto-confirmed (by -confirm=yes option)"),
+    }
+    // map doesn't guarantee preserving the items order, so list list all our items in the order we prefer
+    flagOrder = []string{"dir", "sub", "ext", "expire", "confirm", "silent"}
+)
 
 // @private functions
 func showError() {
@@ -48,7 +52,7 @@ func die(str string) {
     os.Exit(0)
 }
 
-func checkGarbageFile(path string, info os.FileInfo, expireTime int) {
+func checkGarbageFile(path string, info os.FileInfo, expireTime time.Time) {
     // Check if the file is older than expireTime
     if info.ModTime().Before(expireTime) {
         if "" == *cliArgs["confirm"].(*string) {
@@ -58,9 +62,9 @@ func checkGarbageFile(path string, info os.FileInfo, expireTime int) {
             response = strings.TrimSpace(strings.ToLower(response))
             if "y" != response && "yes" != response {
                 fmt.Printf("Skipped file `%s`.\n", path)
-                return nil
+                return
             }
-        }else if "" == *cliArgs["silent"].(*string) {
+        }else if !*cliArgs["silent"].(*bool) {
             fmt.Printf("Deleting `%s`...\n", path)
         }
 
@@ -79,18 +83,21 @@ func main() {
         fmt.Printf("\nUsage of %s:\n", thisExeName)
 
         // This is instead of flag.PrintDefaults()...
-        flag.VisitAll(func(f *flag.Flag) {
-            def := f.DefValue
+        // ...and preserving original order of arguments, instead of alphabetic; w/o using the `flag.VisitAll(func(f *flag.Flag) { ... }`
+        for _, flagName := range flagOrder {
+            if f := flag.Lookup(flagName); nil != f {
+                def := f.DefValue
 
-            // show default value, but only for string types
-            if _, ok := cliArgs[f.Name].(*string); ok && def != "" {
-                def = " (Default: " + def + ".)"
-            }else {
-                def = "" // no default for non-string types
+                // show default value, but only for string types
+                if _, ok := cliArgs[f.Name].(*string); ok && def != "" {
+                    def = " (Default: " + def + ".)"
+                }else {
+                    def = "" // no default for non-string types
+                }
+
+                fmt.Printf("    -%s\t%s.%s\n", f.Name, f.Usage, def) //, f.Default)
             }
-
-            fmt.Printf("    -%s\t%s.%s\n", f.Name, f.Usage, def) //, f.Default)
-        })
+        }
 
         // Add custom description
         fmt.Printf("\nExample: %s -dir=/var/www/your-project-name/data/cache -ext=jpg,jpeg,png,gif,webp -expire=60\n", thisExeName)
@@ -111,10 +118,9 @@ func main() {
     }
 
     // Check, whether target "-dir" is a directory or a single file... And wether it’s exists at all...
-    pathInfo, err := os.Stat(path)
+    pathInfo, err := os.Stat(workDir)
     if err != nil {
-        fmt.Printf("Error accessing path %s: %v\n", path, err)
-        os.Exit(0)
+        die(fmt.Sprintf("Error accessing the path \"%s\".\n", workDir)) // We could also output `err`, but it's confusing. Our simple message is enough.
     }
 
     expire, err := strconv.Atoi(*cliArgs["expire"].(*string))
@@ -129,13 +135,13 @@ func main() {
 
     if pathInfo.IsDir() {
         // Walk through the directory and find files older than expireTime
-        err = filepath.Walk(workDir, func(path string, info os.FileInfo, err error) error {
+        err = filepath.Walk(workDir, func(path string, pathInfo os.FileInfo, err error) error {
             if nil != err {
                 return err
             }
 
             // Skip subdirectories if `-sub` is not specified
-            isDir := info.IsDir()
+            isDir := pathInfo.IsDir()
             if isDir {
                 // skip directory itself, we need its contents and sub-dirs.
                 if workDir == path {
@@ -148,34 +154,20 @@ func main() {
                 }
             }
 
-            // Check if the file is older than expireTime
-            if !isDir && info.ModTime().Before(expireTime) {
-                if "" == *cliArgs["confirm"].(*string) {
-                    reader := bufio.NewReader(os.Stdin)
-                    fmt.Printf("Do you really want to delete file `%s`? (y/n): ", path)
-                    response, _ := reader.ReadString('\n')
-                    response = strings.TrimSpace(strings.ToLower(response))
-                    if "y" != response && "yes" != response {
-                        fmt.Printf("Skipped file `%s`.\n", path)
-                        return nil
-                    }
-                }else if "" == *cliArgs["silent"].(*string) {
-                    fmt.Printf("Deleting `%s`...\n", path)
-                }
-
-                err := os.Remove(path)
-                if nil != err {
-                    // Don't die, just display error and continue...
-                    fmt.Printf("Can’t delete file `%s`.\n%v\n", path, err)
-                }
+            if !isDir {
+                checkGarbageFile(path, pathInfo, expireTime) // Check if the file is older than expireTime
             }
 
             return nil // success
         })
-    }
 
-    if nil != err {
-        die(fmt.Sprintf("Error walking the path `%s`.\n%v\n", workDir, err))
+        if nil != err {
+            die(fmt.Sprintf("Error walking the path `%s`.\n%v\n", workDir, err))
+        }
+
+    // If -dir="[single file]"
+    }else {
+        checkGarbageFile(workDir, pathInfo, expireTime)
     }
 
     // Success
