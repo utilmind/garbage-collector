@@ -35,7 +35,7 @@ var (
         "sub":     flag.Bool("sub", false, "(boolean) include subdirectories, if -sub specified"),
         "ext":     flag.String("ext", "", "file extension(s). Comma-separated if multiple"),
         "expire":  flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don’t check date, delete all"), // AK: actually it's integer, but I'd prefer to parse it myself
-        "confirm": flag.Bool("confirm", false, "(boolean) auto-confirms file deletions. Otherwise you’ll need to confirm file deletions one by one"),
+        "confirm": flag.Bool("confirm", false, "(boolean) auto-confirms file deletions. Otherwise you’ll need to manually confirm file deletions one by one. (-confirm must be specified if used in crontab.)"),
         "silent":  flag.Bool("silent", false, "(boolean) don’t show the names of deleted files, if deletion is auto-confirmed (by -confirm option)"),
     }
     // map doesn't guarantee preserving the items order, so list list all our items in the order we prefer
