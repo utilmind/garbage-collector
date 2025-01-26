@@ -4,7 +4,7 @@ CLI tool to delete outdated files, expired for more than N days.
 
 PLEASE BE CAREFUL! AUTHORS ARE NOT RESPONSIBLE IF YOU ACCIDENTALLY DELETE SOMETHING IMPORTANT!
 
-# Install instructions for n00bs
+# Install instructions for noobs
 
 1. Install GO. (Ask ChatGPT how to do this. In some cases you need to remove outdated version to install the fresh one.)
 Usually it's something like
