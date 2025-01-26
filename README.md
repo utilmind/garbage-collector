@@ -7,9 +7,9 @@ PLEASE BE CAREFUL! AUTHORS ARE NOT RESPONSIBLE IF YOU ACCIDENTALLY DELETE SOMETH
 # Install instructions for noobs
 
 1. Install GO. (Ask ChatGPT how to do this. In some cases you need to remove outdated version to install the fresh one.)
-Usually it's something like
-<pre>wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz</pre>
+Usually it's something like, but check fresh version number on https://go.dev/doc/install
+<pre>wget https://go.dev/dl/go1.23.5.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.23.5.linux-amd64.tar.gz</pre>
 ...then add GO to PATH, if needed, with
 <pre>echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.profile
 source ~/.profile</pre>
