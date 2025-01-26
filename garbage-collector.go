@@ -26,15 +26,17 @@ import (
 
 // @CONFIG
 const DefExpireDays = 90 // Default number of days before a file is considered expired. Used if -expire argument is omitted.
+// ------- end of configuration --------
 
 var (
     cliArgs = map[string]interface{}{
-        "dir":     flag.String("dir", "", "directory name (required). It can be a single file name too. However, for safety reasons, it doesn’t works with top-level directories: the root and the next level below the root."),
-        "sub":     flag.Bool("sub", false, "include subdirectories, if -sub specified"),
+        // -dir can be path to a single file, but this feature is not documented. Because if file already deleted, it will display 'error', that file doesn't exists...
+        "dir":     flag.String("dir", "", "directory name (required). For safety reasons, it doesn’t works with top-level directories: the root and the next level below the root."),
+        "sub":     flag.Bool("sub", false, "(boolean) include subdirectories, if -sub specified"),
         "ext":     flag.String("ext", "", "file extension(s). Comma-separated if multiple"),
         "expire":  flag.String("expire", strconv.Itoa(DefExpireDays), "expire after N days. 0 = don’t check date, delete all"), // AK: actually it's integer, but I'd prefer to parse it myself
-        "confirm": flag.String("confirm", "", "'y' or 'yes' auto-confirms file deletions. Otherwise you’ll need to confirm file deletions one by one"),
-        "silent":  flag.Bool("silent", false, "don’t show the names of deleted files, if deletion is auto-confirmed (by -confirm=yes option)"),
+        "confirm": flag.Bool("confirm", false, "(boolean) auto-confirms file deletions. Otherwise you’ll need to confirm file deletions one by one"),
+        "silent":  flag.Bool("silent", false, "(boolean) don’t show the names of deleted files, if deletion is auto-confirmed (by -confirm option)"),
     }
     // map doesn't guarantee preserving the items order, so list list all our items in the order we prefer
     flagOrder = []string{"dir", "sub", "ext", "expire", "confirm", "silent"}
@@ -55,9 +57,11 @@ func die(str string) {
 func checkGarbageFile(path string, info os.FileInfo, expireTime time.Time) {
     // Check if the file is older than expireTime
     if info.ModTime().Before(expireTime) {
-        if "" == *cliArgs["confirm"].(*string) {
+        if !*cliArgs["confirm"].(*bool) {
             reader := bufio.NewReader(os.Stdin)
             fmt.Printf("Do you really want to delete file `%s`? (y/n): ", path)
+
+            // User input. Wait for 'y' or 'yes', case insensitive...
             response, _ := reader.ReadString('\n')
             response = strings.TrimSpace(strings.ToLower(response))
             if "y" != response && "yes" != response {
