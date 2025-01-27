@@ -1,4 +1,4 @@
-# Garbage Collector
+# Garbage Collector in Go language
 
 CLI tool to remove from specified directory outdated/expired files, created more than N days ago.
 
