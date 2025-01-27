@@ -9,6 +9,7 @@ However you still can use this code if you prefer to have cross-platform code fo
 
 # TODO
 * Support multiple paths in single run, as `-dir=[...]` argument. Either comma `,` or pipe `|` separated.
+* Support search depth (similar to the depth of Linux `find` tool).
 
 # Install instructions for noobs
 
