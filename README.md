@@ -4,10 +4,10 @@ CLI tool to remove from specified directory outdated/expired files, created more
 
 PLEASE BE CAREFUL! AUTHORS ARE NOT RESPONSIBLE IF YOU ACCIDENTALLY DELETE SOMETHING IMPORTANT!
 
-<blockquote>UPD. This tool was created because author was not aware that Linux already have standard tool `find`. 🤡
-  
-E.g. `$ find <path> -type f -mtime <days> -delete`.
-However you still can use this code if you prefer to have cross-platform code for this purpose, or would like to use it as the base for your customized solution.</blockquote>
+> UPD. This tool was created because author was not aware that Linux already have standard tool `find`. 🤡
+>  
+> E.g. `$ find <path> -type f -mtime <days> -delete`.
+> However you still can use this code if you prefer to have cross-platform code for this purpose, or would like to use it as the base for your customized solution.
 
 # TODO
 * Support multiple paths in single run, as `-dir=[...]` argument. Either comma `,` or pipe `|` separated.
