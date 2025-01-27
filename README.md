@@ -1,6 +1,6 @@
 # Garbage Collector
 
-CLI tool to remove from specified directory outdated files, expired for more than N days.
+CLI tool to remove from specified directory outdated/expired files, created more than N days ago.
 
 PLEASE BE CAREFUL! AUTHORS ARE NOT RESPONSIBLE IF YOU ACCIDENTALLY DELETE SOMETHING IMPORTANT!
 
