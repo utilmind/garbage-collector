@@ -5,7 +5,7 @@ CLI tool to delete outdated files, expired for more than N days.
 PLEASE BE CAREFUL! AUTHORS ARE NOT RESPONSIBLE IF YOU ACCIDENTALLY DELETE SOMETHING IMPORTANT!
 
 # TODO
-* Support multiple directories, comma (,) or pipe (|) separated.
+* Support multiple directories, comma `,` or pipe `|` separated.
 
 # Install instructions for noobs
 
